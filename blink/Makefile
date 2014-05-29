@@ -23,9 +23,7 @@ CORE_LIB_HOME := $(ARDUINO_HOME)/libraries
 ARDUINO := $(ARDUINO_HW_HOME)/arduino/cores/arduino
 
 #avr tools path
-AVRDUDE_PATH=$(ARDUINO_HW_HOME)/tools
 AVR_GCC_PATH=$(ARDUINO_HW_HOME)/tools/avr/bin
-
 
 #************************************************************************
 # Library includes and sources
@@ -37,7 +35,7 @@ SRC := $(foreach libdir,$(LIBRARY_PATHS),$(wildcard $(libdir)/*.c)) $(wildcard $
 CXXSRC :=  $(foreach libdir,$(LIBRARY_PATHS),$(wildcard $(libdir)/*.cpp)) $(wildcard $(ARDUINO)/*.cpp)
 
 # port to which the arduino board is connect /dev/ttyACM0 is default for linux
-PORT = /dev/ttyACM0
+#PORT = /dev/ttyACM0
 
 # change the MCU to what ever your board's cpu is 
 MCU = atmega2560
@@ -48,6 +46,18 @@ UPLOAD_RATE = 115200
 ARDUINO_BOARD = mega
 
 # -------------------------- Changes below this line are usually not required --------------------#
+
+# setting the path that are dependent on operating systems
+ifeq ($(shell uname), Darwin)
+	AVRDUDE_PATH=$(ARDUINO_HW_HOME)/tools/avr/bin
+	PORT = /dev/tty.usbmodem1421
+	AVRDUDE_CONFIG_FILE:=$(AVRDUDE_PATH)/../etc/avrdude.conf
+endif
+ifeq ($(shell uname), Linux)
+	AVRDUDE_PATH=$(ARDUINO_HW_HOME)/tools
+	PORT = /dev/ttyACM0
+	AVRDUDE_CONFIG_FILE:=$(AVRDUDE_PATH)/avrdude.conf
+endif
 
 # Name of this Makefile (used for "make depend").
 MAKEFILE = Makefile
@@ -86,7 +96,7 @@ CXXFLAGS = $(CDEFS) $(CINCS) -O$(OPT)
 AVRDUDE_PROGRAMMER = stk500v2
 AVRDUDE_PORT = $(PORT)
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
-AVRDUDE_FLAGS = -F -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -b $(UPLOAD_RATE) -C $(AVRDUDE_PATH)/avrdude.conf
+AVRDUDE_FLAGS = -F -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -b $(UPLOAD_RATE) -C $(AVRDUDE_CONFIG_FILE)
 
 # Program settings
 CC = $(AVR_GCC_PATH)/avr-gcc
